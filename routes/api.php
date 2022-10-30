@@ -23,14 +23,15 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 /**
  * New Routes Custom
  */
-//Login
-Route::post('/login',[AuthController::class,'login']);
 
-//Register
+//Public Route
+Route::post('/login',[AuthController::class,'login']);
 Route::post('/register',[AuthController::class,'register']);
 
-//logout
-Route::post('/logout',[AuthController::class,'logout']);
-
-//Resource Class with all routes
-Route::resource('/tasks', TasksController::class);
+/*
+ * Protected Routes group with Sanctum Authentication
+ * */
+Route::group(['middleware'=>['auth:sanctum']],function(){
+    Route::resource('/tasks', TasksController::class);
+    Route::post('/logout',[AuthController::class,'logout']);
+});
