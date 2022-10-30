@@ -71,12 +71,19 @@ class TasksController extends Controller
 //        return $task;
 //    }
 
-    public function show(Task $task)
+    public function show($id)
     {
-        if(Auth::user()->id !== $task->user_id){
-            return $this->error(NULL,'You are not authorized for this request',403);
+        //Way one using condtion everytime
+        //if(Auth::user()->id !== $task->user_id){
+        //    return $this->error(NULL,'You are not authorized for this request',403);
+        //}
+        //return new TaskResource($task);
+
+        $task = Task::find($id);
+        if($task){
+            return $this->isNotAuthorized($task) ? $this->isNotAuthorized($task) : new TaskResource($task);
         }
-        return new TaskResource($task);
+        return $this->error(NULL,"Task with id: {$id} not found or deleted",404);
     }
 
     /**
@@ -97,9 +104,14 @@ class TasksController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Task $task)
     {
-        //
+        if(Auth::user()->id !== $task->user_id){
+            return $this->error(NULL,'You are not authorized for this request',403);
+        }
+        $task->update($request->all());
+
+        return new TaskResource($task);
     }
 
     /**
@@ -110,6 +122,20 @@ class TasksController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $task = Task::find($id);
+        if($task){
+            $task->delete();
+            return $this->success('action_success',"Task with id: {$id} is deleted",200);
+            //return new TaskResource($task);
+        }
+        return $this->error(NULL,"Task with id: {$id} not found or deleted",404);
+        //abort(404, "Task with id: {$task->id} does not exists");
     }
+
+    private function isNotAuthorized($task){
+        if(Auth::user()->id !== $task->user_id){
+            return $this->error(NULL,'You are not authorized for this request',403);
+        }
+    }
+
 }
